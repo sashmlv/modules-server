@@ -24,7 +24,7 @@ module.exports = {
       path: DIST,
       filename: 'index.js',
       libraryTarget: 'umd',
-	   // libraryExport: 'default',
+      // libraryExport: 'default',
       // globalObject: 'this',
    },
    externals: [
