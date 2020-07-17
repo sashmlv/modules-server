@@ -9,8 +9,8 @@ class Server {
 
    /**
     * Set params
-    * TODO: test for required params
-    * TODO: watch, reload
+    * TODO: handle errors, tests, watch, reload
+    * TEMP: log = { trace, debug, info, warn, error, fatal }
     * @param {object} prm
     * @param {string|object} prm.main - index.html
     * @param {string} prm.main.file - index.html
@@ -23,8 +23,9 @@ class Server {
     * @param {string} prm.backendPath - /some/api/v0.0.1
     * @param {object} prm.contentTypes - { ext: mime }
     * @param {object} prm.log
-    * @param {function} prm.log.error
+    * @param {function} prm.log.debug
     * @param {function} prm.log.info
+    * @param {function} prm.log.error
     * @param {boolean} prm.debug
     * @param {string} prm.debugPrefix
     * @param {string} prm.locale
@@ -82,12 +83,9 @@ class Server {
          this.log = typeof this.log === 'object' ? this.log : {};
          this.log = {
 
-            trace: this.log.trace || write,
             debug: this.log.debug || write,
             info: this.log.info || write,
-            warn: this.log.warn || write,
             error: this.log.error || write,
-            fatal: this.log.fatal || write,
          };
       }
       else {
