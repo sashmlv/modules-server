@@ -24,19 +24,23 @@ class Server {
     * @param {object} prm.log
     * @param {function} prm.log.error
     * @param {function} prm.log.info
+    * @param {boolean} prm.debug
+    * @param {string} prm.debugPrefix
     * @return {object} Return server instance
     **/
    constructor( prm = {}){
 
       this.main = prm.main || {};
-      this.root = prm.root || process.env.PWD;
+      this.root = prm.root ? path.resolve( prm.root ) : process.env.PWD;
       this.frontendHost = prm.frontendHost;
       this.frontendPort = prm.frontendPort;
       this.backendHost = prm.backendHost;
       this.backendPort = prm.backendPort;
       this.backendPath = prm.backendPath;
-      this.log = prm.log;
+      this.log = prm.log || true;
       this.contentTypes = prm.contentTypes;
+      this.debugLog = prm.debug;
+      this.debugPrefix = this.debugLog ? ( prm.debugPrefix || 'DEBUG: ' ) : '';
 
       if( typeof this.main === 'string' ){
 
@@ -65,7 +69,25 @@ class Server {
          };
       };
 
-      if( ! this.log || ! this.log.info || ! this.log.error ){
+      if( this.log ){
+
+         const write = ( ...args ) => {
+
+            process.stdout.write( `${ args.join()}\n` );
+         };
+
+         this.log = typeof this.log === 'object' ? this.log : {};
+         this.log = {
+
+            trace: this.log.trace || write,
+            debug: this.log.debug || write,
+            info: this.log.info || write,
+            warn: this.log.warn || write,
+            error: this.log.error || write,
+            fatal: this.log.fatal || write,
+         };
+      }
+      else {
 
          this.log = undefined;
       };
@@ -144,7 +166,11 @@ class Server {
             }
             else {
 
-               fs.readFile( path.resolve( `${ this.root || '' }${ file }` ), ( err, content ) => {
+               const filePath = path.resolve( `${ this.root }${ file }` );
+
+               this.debug( `\nfile: ${ filePath }\next: ${ ext }\n'Content-Type': ${ this.contentTypes[ ext ]}` );
+
+               fs.readFile( filePath, ( err, content ) => {
 
                   if( err ){
 
@@ -171,6 +197,8 @@ class Server {
             };
          };
       });
+
+      this.debug( `root: ${ this.root }` );
 
       return this;
    };
@@ -201,6 +229,24 @@ class Server {
       this.server.close();
 
       this.log && this.log.info( `Server closed at: ${ new Date().toLocaleString()}` );
+
+      return this;
+   };
+
+
+   /**
+    * Debug log
+    * @param {object} message
+    * @return {object} Return server instance
+    **/
+   debug( message ){
+
+      if( ! this.debugLog || ! this.log ){
+
+         return undefined;
+      };
+
+      this.log && this.log.debug( `${ this.debugPrefix }${ message }` );
 
       return this;
    };
