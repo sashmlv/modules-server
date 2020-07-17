@@ -29,7 +29,7 @@ class Server {
    constructor( prm = {}){
 
       this.main = prm.main || {};
-      this.root = prm.root;
+      this.root = prm.root || __dirname;
       this.frontendHost = prm.frontendHost;
       this.frontendPort = prm.frontendPort;
       this.backendHost = prm.backendHost;
@@ -87,9 +87,7 @@ class Server {
       this.server = http.createServer(( request, response ) => {
 
          const location = url.parse( request.url ),
-            api = location.pathname === this.backendPath,
-            ext = path.extname( location.pathname ),
-            file = ext ? decodeURI( location.pathname ) : this.main.path;
+            api = location.pathname === this.backendPath;
 
          /* proxy for backend api */
          if( api ){
@@ -118,14 +116,35 @@ class Server {
          /* serve files */
          else {
 
-            if( this.main.content && ( file === this.main.path )){
+            let ext = path.extname( location.pathname ).slice( 1 ),
+               file;
 
-               response.writeHead( 200, { 'Content-Type': this.contentTypes[ '.' + ext ]});
-               response.end( this.main.content, 'utf8' );
+            if( ext ){
+
+               file = decodeURI( location.pathname );
             }
             else {
 
-               fs.readFile( `${ this.root }${ file }`, ( err, content ) => {
+               file = this.main.path;
+               ext = path.extname( this.main.path ).slice( 1 );
+            };
+
+            if( this.main.content && ( file === this.main.path )){
+
+               if( ! this.contentTypes[ ext ]){
+
+                  response.writeHead( 404 );
+                  response.end();
+               }
+               else{
+
+                  response.writeHead( 200, { 'Content-Type': this.contentTypes[ ext ]});
+                  response.end( this.main.content, 'utf8' );
+               };
+            }
+            else {
+
+               fs.readFile( path.resolve( `${ this.root || '' }${ file }` ), ( err, content ) => {
 
                   if( err ){
 
@@ -146,7 +165,7 @@ class Server {
                      return response.end();
                   }
 
-                  response.writeHead( 200, { 'Content-Type': this.contentTypes[ '.' + ext ]});
+                  response.writeHead( 200, { 'Content-Type': this.contentTypes[ ext ]});
                   return response.end( content, 'utf8' );
                });
             };
