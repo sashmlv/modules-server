@@ -10,6 +10,7 @@ class Server {
    /**
     * Set params
     * TODO: test for required params
+    * TODO: watch, reload
     * @param {object} prm
     * @param {string|object} prm.main - index.html
     * @param {string} prm.main.file - index.html
@@ -26,6 +27,7 @@ class Server {
     * @param {function} prm.log.info
     * @param {boolean} prm.debug
     * @param {string} prm.debugPrefix
+    * @param {string} prm.locale
     * @return {object} Return server instance
     **/
    constructor( prm = {}){
@@ -41,6 +43,7 @@ class Server {
       this.contentTypes = prm.contentTypes;
       this.debugLog = prm.debug;
       this.debugPrefix = this.debugLog ? ( prm.debugPrefix || 'DEBUG: ' ) : '';
+      this.locale = prm.locale || 'ru-RU';
 
       if( typeof this.main === 'string' ){
 
@@ -228,7 +231,7 @@ class Server {
 
       this.server.close();
 
-      this.log && this.log.info( `Server closed at: ${ new Date().toLocaleString()}` );
+      this.log && this.log.info( `Server closed at: ${ new Date().toLocaleString( this.locale )}` );
 
       return this;
    };
