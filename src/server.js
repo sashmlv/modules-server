@@ -3,95 +3,157 @@
 const http = require( 'http' ),
    url = require( 'url' ),
    fs = require( 'fs' ),
-   path = require( 'path' ),
-   contentTypes = {
+   path = require( 'path' );
 
-      '.html': 'text/html',
-      '.js': 'text/javascript',
-      '.mjs': 'text/javascript',
+class Server {
+
+   /**
+    * Set params
+    * @param {object} prm
+    * @param {string} prm.main - index.html
+    * @param {string} prm.root - assets root
+    * @param {string} prm.frontendHost
+    * @param {number} prm.frontendPort
+    * @param {string} prm.backendHost
+    * @param {number} prm.backendPort
+    * @param {string} prm.backendPath - /some/api/v0.0.1
+    * @param {object} prm.contentTypes - { ext: mime }
+    * @param {object} prm.log
+    * @param {function} prm.log.error
+    * @param {function} prm.log.info
+    * @return {object} Return server instance
+    **/
+   constructor( prm = {}){
+
+      this.main = prm.main;
+      this.root = prm.root;
+      this.frontendHost = prm.frontendHost;
+      this.frontendPort = prm.frontendPort;
+      this.backendHost = prm.backendHost;
+      this.backendPort = prm.backendPort;
+      this.backendPath = prm.backendPath;
+      this.log = prm.log;
+      this.contentTypes = prm.contentTypes;
+
+      if( ! this.log || ! this.log.info || ! this.log.error ){
+
+         this.log = undefined;
+      };
+
+      if( ! this.contentTypes ){
+
+         this.contentTypes = {
+
+            'html': 'text/html',
+            'js': 'text/javascript',
+            'mjs': 'text/javascript',
+         };
+      };
+
+      this.create();
+
+      return this;
    };
 
-/**
- * Server
- * @param {object} prm
- * @param {object} prm.main - index.html
- * @param {object} prm.dist
- * @param {object} prm.frontendPort
- * @param {object} prm.frontendHost
- * @param {object} prm.backendHost
- * @param {object} prm.backendPort
- * @param {object} prm.backendPath
- * @return {object} Return server
- **/
-module.exports = function listen( prm ) {
+   /**
+    * Create server
+    * @return {object} Return server instance
+    **/
+   create (){
 
-   const {
+      this.server = http.createServer(( request, response ) => {
 
-      main,
-      dist,
-      frontendPort,
-      frontendHost,
-      backendHost,
-      backendPort,
-      backendPath,
-   } = prm;
+         const location = url.parse( request.url ),
+            api = location.pathname === this.backendPath,
+            ext = path.extname( location.pathname ),
+            file = ext ? decodeURI( location.pathname ) : `/${ this.main }`;
 
-   const server = http.createServer(( request, response ) => {
+         /* proxy for backend api */
+         if( api ){
 
-      const location = url.parse( request.url ),
-         api = location.pathname === backendPath,
-         ext = path.extname( location.pathname ),
-         file = ext ? decodeURI( location.pathname ) : `/${ main }`;
+            request.pipe(
 
-      /* proxy for backend api */
-      if( api ){
+               http.request({
 
-         request.pipe(
+                  host: this.backendHost,
+                  port: this.backendPort,
+                  headers: request.headers,
+                  method: request.method,
+                  path: request.url,
+               },
+                  res => {
 
-            http.request({
+                     response.writeHead( res.statusCode, res.headers );
 
-               host: backendHost,
-               port: backendPort,
-               headers: request.headers,
-               method: request.method,
-               path: request.url,
-            },
-               res => {
+                     return res.pipe( response, { end: true });
+                  }
+               ),
+               { end: true }
+            );
+         }
 
-                  response.writeHead( res.statusCode, res.headers );
+         /* serve files */
+         else {
 
-                  return res.pipe( response, { end: true });
+            fs.readFile( `${ this.root }${ file }`, ( err, content ) => {
+
+               if( err ){
+
+                  if( err.code === 'ENOENT' ){
+
+                     response.writeHead( 404 );
+                  }
+                  else {
+
+                     response.writeHead( 500 );
+                  };
+
+                  return response.end();
                }
-            ),
-            { end: true }
-         );
-      }
+               else if( ! this.contentTypes[ ext ]){
 
-      /* serve files */
-      else {
+                  response.writeHead( 404 );
+                  return response.end();
+               }
 
-         fs.readFile( `${ dist }${ file }`, ( err, content ) => {
+               response.writeHead( 200, { 'Content-Type': this.contentTypes[ '.' + ext ]});
+               return response.end( content, 'utf8' );
+            });
+         };
+      });
 
-            if( err ){
+      return this;
+   };
 
-               err.code === 'ENOENT' ?
-                  response.writeHead( 404 ) :
-                  response.writeHead( 500 );
+   /**
+    * Server listen
+    * @return {object} Return server instance
+    **/
+   listen(){
 
-               return response.end();
-            };
+      this.server.listen(
 
-            if( contentTypes[ ext ]){
+         this.frontendPort,
+         this.frontendHost,
+      );
 
-               response.writeHead( 200, { 'Content-Type': contentTypes[ ext ]});
-            };
+      this.log && this.log.info( `Server listen at: http://${ this.frontendHost }:${ this.frontendPort }` );
 
-            return response.end( content, 'utf8' );
-         });
-      };
-   });
+      return this;
+   };
 
-   server.listen( frontendPort, frontendHost );
+   /**
+    * Server close
+    * @return {object} Return server instance
+    **/
+   close(){
 
-   console.log( `Listen: http://${ frontendHost }:${ frontendPort }` );
+      this.server.close();
+
+      this.log && this.log.info( `Server closed at: ${ new Date().toLocaleString()}` );
+
+      return this;
+   };
 };
+
+module.exports = Server;
