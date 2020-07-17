@@ -168,7 +168,7 @@ class Server {
 
                const filePath = path.resolve( `${ this.root }${ file }` );
 
-               this.debug( `\nfile: ${ filePath }\next: ${ ext }\n'Content-Type': ${ this.contentTypes[ ext ]}` );
+               this.debug( `file: ${ filePath } | ext: ${ ext } | 'Content-Type': ${ this.contentTypes[ ext ]}` );
 
                fs.readFile( filePath, ( err, content ) => {
 
@@ -232,7 +232,6 @@ class Server {
 
       return this;
    };
-
 
    /**
     * Debug log
