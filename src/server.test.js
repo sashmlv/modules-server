@@ -24,8 +24,11 @@ test( 'server', t => {
    server.server.listen = sinon.spy( server.server.listen );
    server.server.close = sinon.spy( server.server.close );
 
+   t.deepEqual( server.main.file, 'index.html' );
+   t.deepEqual( server.main.path, '/index.html' );
    t.deepEqual( server.contentTypes.txt, 'text/plain' );
-   t.deepEqual( server.contentTypes.log, undefined );
+   t.deepEqual( server.log, undefined );
+
    t.deepEqual( http.createServer.callCount, 1 );
    t.deepEqual( server.server.listen.callCount, 0 );
    t.deepEqual( server.server.close.callCount, 0 );
