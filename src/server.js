@@ -40,7 +40,7 @@ class Server {
       this.backendHost = prm.backendHost;
       this.backendPort = prm.backendPort;
       this.backendPath = prm.backendPath;
-      this.log = prm.log || true;
+      this.log = prm.log;
       this.contentTypes = prm.contentTypes;
       this.debugLog = prm.debug;
       this.debugPrefix = this.debugLog ? ( prm.debugPrefix || 'DEBUG: ' ) : '';
