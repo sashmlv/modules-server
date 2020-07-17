@@ -50,6 +50,18 @@ class Server {
             'html': 'text/html',
             'js': 'text/javascript',
             'mjs': 'text/javascript',
+		      'css': 'text/css',
+		      'json': 'application/json',
+		      'jpeg': 'image/jpeg',
+		      'jpg': 'image/jpeg',
+		      'png': 'image/png',
+		      'ttf': 'font/ttf',
+		      'eot': 'font/eot',
+		      'woff': 'font/woff',
+		      'woff2': 'font/woff2',
+		      'svg': 'image/svg+xml',
+		      'gz': 'application/x-compressed',
+		      'xsl': 'text/xsl',
          };
       };
 
