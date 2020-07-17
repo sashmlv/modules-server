@@ -29,7 +29,7 @@ class Server {
    constructor( prm = {}){
 
       this.main = prm.main || {};
-      this.root = prm.root || __dirname;
+      this.root = prm.root || process.env.PWD;
       this.frontendHost = prm.frontendHost;
       this.frontendPort = prm.frontendPort;
       this.backendHost = prm.backendHost;

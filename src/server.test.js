@@ -28,6 +28,7 @@ test( 'server', t => {
    t.deepEqual( server.main.path, '/index.html' );
    t.deepEqual( server.contentTypes.txt, 'text/plain' );
    t.deepEqual( server.log, undefined );
+   t.truthy( server.root );
 
    t.deepEqual( http.createServer.callCount, 1 );
    t.deepEqual( server.server.listen.callCount, 0 );
